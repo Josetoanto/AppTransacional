@@ -4,6 +4,6 @@ import 'package:flutter/widgets.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await AppInjector.init();
+  await AppInjector.init(baseUrl: 'https://essentia.fun');
   runApp(const App());
 }

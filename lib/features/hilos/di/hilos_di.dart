@@ -1,4 +1,4 @@
-import 'package:apptransaccional/core/network/client.dart';
+import 'package:apptransaccional/core/network/http_client.dart';
 import 'package:apptransaccional/features/hilos/data/datasources/hilos_remote_data_source.dart';
 import 'package:apptransaccional/features/hilos/data/repositories/hilos_repository_impl.dart';
 import 'package:apptransaccional/features/hilos/domain/repos/hilos_repository.dart';
@@ -9,9 +9,13 @@ import 'package:apptransaccional/features/hilos/domain/usecases/update_hilo.dart
 import 'package:apptransaccional/features/hilos/presentation/provider/hilos_provider.dart';
 
 HilosRemoteDataSource provideHilosRemoteDataSource({
-  required NetworkClient networkClient,
+  required HttpClient httpClient,
+  String hilosPath = '/api/hilos',
 }) {
-  return HilosRemoteDataSourceImpl(networkClient);
+  return HilosRemoteDataSourceImpl(
+    httpClient,
+    hilosPath: hilosPath,
+  );
 }
 
 HilosRepository provideHilosRepository({
@@ -37,12 +41,9 @@ DeleteHilo provideDeleteHilo({required HilosRepository repository}) {
 }
 
 HilosProvider provideHilosProvider({
-  required NetworkClient networkClient,
+  required HilosRemoteDataSource remoteDataSource,
   required String? Function() currentUserIdResolver,
 }) {
-  final remoteDataSource = provideHilosRemoteDataSource(
-    networkClient: networkClient,
-  );
   final repository = provideHilosRepository(remoteDataSource: remoteDataSource);
 
   return HilosProvider(

@@ -1,5 +1,5 @@
 import 'package:apptransaccional/core/errors/exceptions.dart';
-import 'package:apptransaccional/core/network/client.dart';
+import 'package:apptransaccional/core/network/http_client.dart';
 import 'package:apptransaccional/features/auth/data/models/user_model.dart';
 
 abstract class AuthRemoteDataSource {
@@ -15,11 +15,16 @@ abstract class AuthRemoteDataSource {
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
-  AuthRemoteDataSourceImpl(this._networkClient);
+  AuthRemoteDataSourceImpl(
+    this._httpClient, {
+    this.loginPath = '/api/login',
+    this.registerPath = '/api/register',
+  });
 
-  final NetworkClient _networkClient;
+  final HttpClient _httpClient;
+  final String loginPath;
+  final String registerPath;
 
-  static const String _baseUrl = 'https://reqres.in/api';
   static const String _fallbackLoginToken = 'dev-skip-missing-api-key-login';
   static const String _fallbackRegisterToken =
       'dev-skip-missing-api-key-register';
@@ -30,17 +35,21 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String password,
   }) async {
     try {
-      final Map<String, dynamic> response = await _networkClient.postJson(
-        url: '$_baseUrl/login',
+      final dynamic responseBody = await _httpClient.post(
+        loginPath,
         body: <String, dynamic>{'email': email, 'password': password},
       );
 
-      if (response['token'] == null) {
+      if (responseBody is! Map<String, dynamic>) {
+        throw AuthException('Invalid response format for login endpoint.');
+      }
+
+      if (responseBody['token'] == null) {
         throw AuthException('No token received from login endpoint.');
       }
 
-      return UserModel.fromJson(response, email: email);
-    } on NetworkException catch (exception) {
+      return UserModel.fromJson(responseBody, email: email);
+    } on AppException catch (exception) {
       if (_isMissingApiKey(exception)) {
         return UserModel(
           email: email,
@@ -59,17 +68,21 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String password,
   }) async {
     try {
-      final Map<String, dynamic> response = await _networkClient.postJson(
-        url: '$_baseUrl/register',
+      final dynamic responseBody = await _httpClient.post(
+        registerPath,
         body: <String, dynamic>{'email': email, 'password': password},
       );
 
-      if (response['token'] == null) {
+      if (responseBody is! Map<String, dynamic>) {
+        throw AuthException('Invalid response format for register endpoint.');
+      }
+
+      if (responseBody['token'] == null) {
         throw AuthException('No token received from register endpoint.');
       }
 
-      return UserModel.fromJson(response, email: email);
-    } on NetworkException catch (exception) {
+      return UserModel.fromJson(responseBody, email: email);
+    } on AppException catch (exception) {
       if (_isMissingApiKey(exception)) {
         return UserModel(
           email: email,
@@ -82,7 +95,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     }
   }
 
-  bool _isMissingApiKey(NetworkException exception) {
+  bool _isMissingApiKey(AppException exception) {
     return exception.message.toLowerCase().contains('missing api key');
   }
 }
