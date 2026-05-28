@@ -8,8 +8,8 @@ import 'package:apptransaccional/features/auth/presentation/provider/auth_provid
 
 AuthRemoteDataSource provideAuthRemoteDataSource({
   required HttpClient httpClient,
-  String loginPath = '/api/login',
-  String registerPath = '/api/register',
+  String loginPath = '/auth/login',
+  String registerPath = '/auth/register',
 }) {
   return AuthRemoteDataSourceImpl(
     httpClient,

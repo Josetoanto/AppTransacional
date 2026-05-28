@@ -1,9 +1,14 @@
+import 'package:apptransaccional/features/hilos/domain/entities/hilo.dart';
 import 'package:flutter/material.dart';
 
+// StatefulWidget because it keeps local form state and text controller during editing.
 class HiloEditorPage extends StatefulWidget {
-  const HiloEditorPage({super.key, this.initialContenido});
+  const HiloEditorPage({
+    super.key,
+    this.hilo,
+  });
 
-  final String? initialContenido;
+  final Hilo? hilo;
 
   @override
   State<HiloEditorPage> createState() => _HiloEditorPageState();
@@ -16,7 +21,9 @@ class _HiloEditorPageState extends State<HiloEditorPage> {
   @override
   void initState() {
     super.initState();
-    _contenidoController = TextEditingController(text: widget.initialContenido ?? '');
+    _contenidoController = TextEditingController(
+      text: widget.hilo?.contenidoTexto ?? '',
+    );
   }
 
   @override
@@ -35,7 +42,7 @@ class _HiloEditorPageState extends State<HiloEditorPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isEditing = widget.initialContenido != null;
+    final isEditing = widget.hilo != null;
 
     return Scaffold(
       appBar: AppBar(

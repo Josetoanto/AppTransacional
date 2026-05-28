@@ -9,15 +9,16 @@ class AuthUiState {
     this.message,
   });
 
-  const AuthUiState.idle() : this._(status: AuthStatus.idle);
+  factory AuthUiState.idle() => const AuthUiState._(status: AuthStatus.idle);
 
-  const AuthUiState.loading() : this._(status: AuthStatus.loading);
+  factory AuthUiState.loading() =>
+      const AuthUiState._(status: AuthStatus.loading);
 
-  const AuthUiState.success(User user)
-    : this._(status: AuthStatus.success, user: user);
+  factory AuthUiState.success(User user) =>
+      AuthUiState._(status: AuthStatus.success, user: user);
 
-  const AuthUiState.error(String message)
-    : this._(status: AuthStatus.error, message: message);
+  factory AuthUiState.error(String message) =>
+      AuthUiState._(status: AuthStatus.error, message: message);
 
   final AuthStatus status;
   final User? user;

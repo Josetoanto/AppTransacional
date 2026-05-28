@@ -1,9 +1,10 @@
-import 'package:apptransaccional/core/di/app_injector.dart';
 import 'package:apptransaccional/features/auth/presentation/provider/auth_provider.dart';
 import 'package:apptransaccional/features/auth/presentation/ui_state/auth_ui_state.dart';
 import 'package:apptransaccional/shared/constants/app_constants.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+// StatefulWidget because it owns local form state/controllers and reacts to one-time side effects.
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
 
@@ -15,32 +16,31 @@ class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  late final AuthProvider _authProvider;
+  bool _didResetProvider = false;
+  AuthStatus? _lastStatus;
 
   @override
-  void initState() {
-    super.initState();
-    _authProvider = AppInjector.authProvider;
-    _authProvider.reset();
-    _authProvider.addListener(_onAuthStateChanged);
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_didResetProvider) {
+      return;
+    }
+
+    _didResetProvider = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+
+      context.read<AuthProvider>().reset();
+    });
   }
 
   @override
   void dispose() {
-    _authProvider.removeListener(_onAuthStateChanged);
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
-  }
-
-  void _onAuthStateChanged() {
-    if (!mounted) {
-      return;
-    }
-
-    if (_authProvider.state.status == AuthStatus.success) {
-      Navigator.of(context).pushReplacementNamed(AppConstants.routeHome);
-    }
   }
 
   Future<void> _submitRegister() async {
@@ -48,20 +48,52 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-    await _authProvider.register(
+    await context.read<AuthProvider>().register(
       email: _emailController.text.trim(),
       password: _passwordController.text,
     );
+  }
+
+  void _handleAuthEffects(AuthUiState uiState) {
+    if (!mounted || _lastStatus == uiState.status) {
+      return;
+    }
+
+    _lastStatus = uiState.status;
+    if (uiState.status == AuthStatus.success) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) {
+          return;
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Registro exitoso.')),
+        );
+        Navigator.of(context).pushReplacementNamed(AppConstants.routeHome);
+      });
+    }
+
+    if (uiState.status == AuthStatus.error && uiState.message != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) {
+          return;
+        }
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(uiState.message!)));
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Register')),
-      body: AnimatedBuilder(
-        animation: _authProvider,
-        builder: (context, _) {
-          final uiState = _authProvider.state;
+      body: Consumer<AuthProvider>(
+        builder: (context, authProvider, _) {
+          final uiState = authProvider.state;
+          _handleAuthEffects(uiState);
 
           return Padding(
             padding: const EdgeInsets.all(24),

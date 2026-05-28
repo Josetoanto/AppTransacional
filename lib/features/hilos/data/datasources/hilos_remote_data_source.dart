@@ -19,7 +19,7 @@ abstract class HilosRemoteDataSource {
 class HilosRemoteDataSourceImpl implements HilosRemoteDataSource {
   HilosRemoteDataSourceImpl(
     this._httpClient, {
-    this.hilosPath = '/api/hilos',
+    this.hilosPath = '/hilos',
   });
 
   final HttpClient _httpClient;

@@ -10,7 +10,7 @@ import 'package:apptransaccional/features/hilos/presentation/provider/hilos_prov
 
 HilosRemoteDataSource provideHilosRemoteDataSource({
   required HttpClient httpClient,
-  String hilosPath = '/api/hilos',
+  String hilosPath = '/hilos',
 }) {
   return HilosRemoteDataSourceImpl(
     httpClient,

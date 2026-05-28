@@ -9,16 +9,20 @@ class HilosUiState {
     this.message,
   });
 
-  const HilosUiState.loading() : this._(status: HilosStatus.loading, hilos: const []);
+  factory HilosUiState.loading() =>
+      const HilosUiState._(status: HilosStatus.loading, hilos: []);
 
-  const HilosUiState.loaded(List<Hilo> hilos)
-    : this._(status: HilosStatus.loaded, hilos: hilos);
+  factory HilosUiState.loaded(List<Hilo> hilos) =>
+      HilosUiState._(status: HilosStatus.loaded, hilos: hilos);
 
-  const HilosUiState.empty()
-    : this._(status: HilosStatus.empty, hilos: const []);
+  factory HilosUiState.empty() =>
+      const HilosUiState._(status: HilosStatus.empty, hilos: []);
 
-  const HilosUiState.error({required String message, required List<Hilo> hilos})
-    : this._(status: HilosStatus.error, hilos: hilos, message: message);
+  factory HilosUiState.error({
+    required String message,
+    required List<Hilo> hilos,
+  }) =>
+      HilosUiState._(status: HilosStatus.error, hilos: hilos, message: message);
 
   final HilosStatus status;
   final List<Hilo> hilos;

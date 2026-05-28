@@ -53,6 +53,7 @@ await AppInjector.init(baseUrl: 'https://essentia.fun');
 ```
 
 Opcionalmente puedes enviar tokenSecret y parametros de red (timeout/retries) desde AppInjector.init.
+Las rutas por defecto ya apuntan a `/auth/login`, `/auth/register` y `/hilos`.
 
 ## Health Check HTTP
 

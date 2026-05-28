@@ -22,18 +22,18 @@ class HilosProvider extends ChangeNotifier {
   final DeleteHilo deleteHilo;
   final String? Function() currentUserIdResolver;
 
-  HilosUiState _state = const HilosUiState.loading();
+  HilosUiState _state = HilosUiState.loading();
 
   HilosUiState get state => _state;
 
   Future<void> fetchAll() async {
-    _state = const HilosUiState.loading();
+    _state = HilosUiState.loading();
     notifyListeners();
 
     try {
       final hilos = await getHilos();
       if (hilos.isEmpty) {
-        _state = const HilosUiState.empty();
+        _state = HilosUiState.empty();
       } else {
         _state = HilosUiState.loaded(hilos);
       }
@@ -97,8 +97,8 @@ class HilosProvider extends ChangeNotifier {
           .map((item) => item.id == updated.id ? updated : item)
           .toList();
 
-      _state = updatedList.isEmpty
-          ? const HilosUiState.empty()
+        _state = updatedList.isEmpty
+          ? HilosUiState.empty()
           : HilosUiState.loaded(updatedList);
       notifyListeners();
     } on AppException catch (exception) {
@@ -122,8 +122,8 @@ class HilosProvider extends ChangeNotifier {
       await deleteHilo(hiloId: hilo.id);
 
       final updatedList = _state.hilos.where((item) => item.id != hilo.id).toList();
-      _state = updatedList.isEmpty
-          ? const HilosUiState.empty()
+        _state = updatedList.isEmpty
+          ? HilosUiState.empty()
           : HilosUiState.loaded(updatedList);
       notifyListeners();
     } on AppException catch (exception) {

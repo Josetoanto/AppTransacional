@@ -17,8 +17,8 @@ abstract class AuthRemoteDataSource {
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   AuthRemoteDataSourceImpl(
     this._httpClient, {
-    this.loginPath = '/api/login',
-    this.registerPath = '/api/register',
+    this.loginPath = '/auth/login',
+    this.registerPath = '/auth/register',
   });
 
   final HttpClient _httpClient;

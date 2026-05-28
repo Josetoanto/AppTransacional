@@ -49,9 +49,9 @@ class AppInjector {
     String? tokenSecret,
     Duration timeout = const Duration(seconds: 20),
     int retryCount = 1,
-    String authLoginPath = '/api/login',
-    String authRegisterPath = '/api/register',
-    String hilosPath = '/api/hilos',
+    String authLoginPath = '/auth/login',
+    String authRegisterPath = '/auth/register',
+    String hilosPath = '/hilos',
   }) async {
     if (_initialized) {
       return;

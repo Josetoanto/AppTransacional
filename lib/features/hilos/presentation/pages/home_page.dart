@@ -1,10 +1,13 @@
-import 'package:apptransaccional/core/di/app_injector.dart';
 import 'package:apptransaccional/features/hilos/domain/entities/hilo.dart';
 import 'package:apptransaccional/features/hilos/presentation/pages/hilo_editor_page.dart';
 import 'package:apptransaccional/features/hilos/presentation/provider/hilos_provider.dart';
 import 'package:apptransaccional/features/hilos/presentation/ui_state/hilos_ui_state.dart';
+import 'package:apptransaccional/features/hilos/presentation/widgets/create_hilo_button.dart';
+import 'package:apptransaccional/features/hilos/presentation/widgets/hilo_tile.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+// StatefulWidget because it triggers one-time side effects (initial fetch and snackbars) and tracks last observed UI state.
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -13,31 +16,24 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late final HilosProvider _hilosProvider;
+  bool _didRequestInitialData = false;
+  HilosStatus? _lastStatus;
 
   @override
-  void initState() {
-    super.initState();
-    _hilosProvider = AppInjector.hilosProvider;
-    _hilosProvider.fetchAll();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_didRequestInitialData) {
+      return;
+    }
+
+    _didRequestInitialData = true;
+    context.read<HilosProvider>().fetchAll();
   }
 
   Future<void> _openCreateEditor() async {
     final contenido = await Navigator.of(context).push<String>(
-      MaterialPageRoute<String>(builder: (_) => const HiloEditorPage()),
-    );
-
-    if (!mounted || contenido == null) {
-      return;
-    }
-
-    await _hilosProvider.create(contenidoTexto: contenido);
-  }
-
-  Future<void> _openEditEditor(Hilo hilo) async {
-    final contenido = await Navigator.of(context).push<String>(
       MaterialPageRoute<String>(
-        builder: (_) => HiloEditorPage(initialContenido: hilo.contenidoTexto),
+        builder: (_) => const HiloEditorPage(),
       ),
     );
 
@@ -45,7 +41,35 @@ class _HomePageState extends State<HomePage> {
       return;
     }
 
-    await _hilosProvider.update(hilo: hilo, nuevoContenido: contenido);
+    await context.read<HilosProvider>().create(contenidoTexto: contenido);
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Hilo creado correctamente.')),
+    );
+  }
+
+  Future<void> _openEditEditor(Hilo hilo) async {
+    final contenido = await Navigator.of(context).push<String>(
+      MaterialPageRoute<String>(
+        builder: (_) => HiloEditorPage(hilo: hilo),
+      ),
+    );
+
+    if (!mounted || contenido == null) {
+      return;
+    }
+
+    await context.read<HilosProvider>().update(hilo: hilo, nuevoContenido: contenido);
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Hilo actualizado correctamente.')),
+    );
   }
 
   Future<void> _confirmDelete(Hilo hilo) async {
@@ -73,22 +97,31 @@ class _HomePageState extends State<HomePage> {
       return;
     }
 
-    await _hilosProvider.delete(hilo: hilo);
+    if (!mounted) {
+      return;
+    }
+
+    final hilosProvider = context.read<HilosProvider>();
+    await hilosProvider.delete(hilo: hilo);
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Hilo eliminado correctamente.')),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Feed de hilos')),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openCreateEditor,
-        icon: const Icon(Icons.add),
-        label: const Text('Nuevo hilo'),
-      ),
-      body: AnimatedBuilder(
-        animation: _hilosProvider,
-        builder: (context, _) {
-          final uiState = _hilosProvider.state;
+      floatingActionButton: CreateHiloButton(onPressed: _openCreateEditor),
+      body: Consumer<HilosProvider>(
+        builder: (context, hilosProvider, _) {
+          final uiState = hilosProvider.state;
+          _handleStateFeedback(uiState);
+
           switch (uiState.status) {
             case HilosStatus.loading:
               return const Center(child: CircularProgressIndicator());
@@ -134,11 +167,30 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void _handleStateFeedback(HilosUiState uiState) {
+    if (!mounted || _lastStatus == uiState.status) {
+      return;
+    }
+
+    _lastStatus = uiState.status;
+    if (uiState.status == HilosStatus.error && uiState.message != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) {
+          return;
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(uiState.message!)),
+        );
+      });
+    }
+  }
+
   Widget _buildHilosList(List<Hilo> hilos) {
-    final currentUserId = AppInjector.authProvider.state.user?.id;
+    final currentUserId = context.read<HilosProvider>().currentUserIdResolver();
 
     return RefreshIndicator(
-      onRefresh: _hilosProvider.fetchAll,
+      onRefresh: context.read<HilosProvider>().fetchAll,
       child: ListView.separated(
         padding: const EdgeInsets.all(12),
         itemCount: hilos.length,
@@ -147,38 +199,12 @@ class _HomePageState extends State<HomePage> {
           final hilo = hilos[index];
           final isOwner = hilo.usuarioId == currentUserId;
 
-          return Card(
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    hilo.contenidoTexto,
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Autor: ${hilo.usuarioId} | ${hilo.fechaCreacion.toLocal()}',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  if (isOwner)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          onPressed: () => _openEditEditor(hilo),
-                          child: const Text('Editar'),
-                        ),
-                        TextButton(
-                          onPressed: () => _confirmDelete(hilo),
-                          child: const Text('Eliminar'),
-                        ),
-                      ],
-                    ),
-                ],
-              ),
-            ),
+          return HiloTile.fromType(
+            hilo: hilo,
+            isOwner: isOwner,
+            onEdit: () => _openEditEditor(hilo),
+            onDelete: () => _confirmDelete(hilo),
+            compact: false,
           );
         },
       ),

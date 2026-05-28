@@ -10,12 +10,12 @@ class AuthProvider extends ChangeNotifier {
   final LoginUser _loginUser;
   final RegisterUser _registerUser;
 
-  AuthUiState _state = const AuthUiState.idle();
+  AuthUiState _state = AuthUiState.idle();
 
   AuthUiState get state => _state;
 
   Future<void> login({required String email, required String password}) async {
-    _state = const AuthUiState.loading();
+    _state = AuthUiState.loading();
     notifyListeners();
 
     try {
@@ -27,13 +27,13 @@ class AuthProvider extends ChangeNotifier {
       _state = AuthUiState.error(exception.message);
       notifyListeners();
     } catch (_) {
-      _state = const AuthUiState.error('Unexpected error during login.');
+      _state = AuthUiState.error('Unexpected error during login.');
       notifyListeners();
     }
   }
 
   Future<void> register({required String email, required String password}) async {
-    _state = const AuthUiState.loading();
+    _state = AuthUiState.loading();
     notifyListeners();
 
     try {
@@ -44,13 +44,13 @@ class AuthProvider extends ChangeNotifier {
       _state = AuthUiState.error(exception.message);
       notifyListeners();
     } catch (_) {
-      _state = const AuthUiState.error('Unexpected error during register.');
+      _state = AuthUiState.error('Unexpected error during register.');
       notifyListeners();
     }
   }
 
   void reset() {
-    _state = const AuthUiState.idle();
+    _state = AuthUiState.idle();
     notifyListeners();
   }
 }
