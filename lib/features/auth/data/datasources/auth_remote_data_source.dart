@@ -15,7 +15,7 @@ abstract class AuthRemoteDataSource {
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
-  AuthRemoteDataSourceImpl({required this._networkClient});
+  AuthRemoteDataSourceImpl(this._networkClient);
 
   final NetworkClient _networkClient;
 

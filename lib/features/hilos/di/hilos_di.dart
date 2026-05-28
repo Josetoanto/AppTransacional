@@ -1,0 +1,55 @@
+import 'package:apptransaccional/core/network/client.dart';
+import 'package:apptransaccional/features/hilos/data/datasources/hilos_remote_data_source.dart';
+import 'package:apptransaccional/features/hilos/data/repositories/hilos_repository_impl.dart';
+import 'package:apptransaccional/features/hilos/domain/repos/hilos_repository.dart';
+import 'package:apptransaccional/features/hilos/domain/usecases/create_hilo.dart';
+import 'package:apptransaccional/features/hilos/domain/usecases/delete_hilo.dart';
+import 'package:apptransaccional/features/hilos/domain/usecases/get_hilos.dart';
+import 'package:apptransaccional/features/hilos/domain/usecases/update_hilo.dart';
+import 'package:apptransaccional/features/hilos/presentation/provider/hilos_provider.dart';
+
+HilosRemoteDataSource provideHilosRemoteDataSource({
+  required NetworkClient networkClient,
+}) {
+  return HilosRemoteDataSourceImpl(networkClient);
+}
+
+HilosRepository provideHilosRepository({
+  required HilosRemoteDataSource remoteDataSource,
+}) {
+  return HilosRepositoryImpl(remoteDataSource: remoteDataSource);
+}
+
+GetHilos provideGetHilos({required HilosRepository repository}) {
+  return GetHilos(repository);
+}
+
+CreateHilo provideCreateHilo({required HilosRepository repository}) {
+  return CreateHilo(repository);
+}
+
+UpdateHilo provideUpdateHilo({required HilosRepository repository}) {
+  return UpdateHilo(repository);
+}
+
+DeleteHilo provideDeleteHilo({required HilosRepository repository}) {
+  return DeleteHilo(repository);
+}
+
+HilosProvider provideHilosProvider({
+  required NetworkClient networkClient,
+  required String? Function() currentUserIdResolver,
+}) {
+  final remoteDataSource = provideHilosRemoteDataSource(
+    networkClient: networkClient,
+  );
+  final repository = provideHilosRepository(remoteDataSource: remoteDataSource);
+
+  return HilosProvider(
+    getHilos: provideGetHilos(repository: repository),
+    createHilo: provideCreateHilo(repository: repository),
+    updateHilo: provideUpdateHilo(repository: repository),
+    deleteHilo: provideDeleteHilo(repository: repository),
+    currentUserIdResolver: currentUserIdResolver,
+  );
+}

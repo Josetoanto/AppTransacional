@@ -9,7 +9,7 @@ import 'package:apptransaccional/features/auth/presentation/provider/auth_provid
 AuthRemoteDataSource provideAuthRemoteDataSource({
   required NetworkClient networkClient,
 }) {
-  return AuthRemoteDataSourceImpl(networkClient: networkClient);
+  return AuthRemoteDataSourceImpl(networkClient);
 }
 
 AuthRepository provideAuthRepository({
